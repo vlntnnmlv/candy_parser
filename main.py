@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import	pandas
 import	requests
 import	openpyxl
@@ -6,6 +8,7 @@ import	os
 from	bs4 import BeautifulSoup as bs
 from	itertools import islice
 from	tkinter import *
+import	sys
 
 def get_raw_data(path):
 	wb = openpyxl.load_workbook(path)
@@ -42,12 +45,12 @@ def iget_bakerstore(parser):
 		price = raw.string
 	else:
 		price = parser.find("span", {"class" : "autocalc-product-price"}).string
-	return (price)
+	return (price + ".0")
 
 def iget_vtk(parser):
 	# Gets price from the vtk page's parser object
 	price = parser.find("span", {"class" : "tprice-value"}).string
-	return (price.replace(" ", ""))
+	return (price.replace(" ", "") + ".0")
 
 def iget_tortomaster(parser):
 	# Gets price from the tortomaster page's parser object
@@ -56,16 +59,18 @@ def iget_tortomaster(parser):
 
 def onclick(event=None):
 	res = txt.get()
+	exec_path = os.path.abspath(os.path.dirname(sys.argv[0]))
+	path.config(text = "PATH: " + exec_path + "/" + res)
 	if (res.split(".")[-1] != "xlsx"):
-		lbl.config(text = "Введите название Ексель файла!")
-	elif not os.path.exists(os.getcwd() + "/" + res):
+		lbl.config(text = "Введите название Ексель файла.")
+	elif not os.path.exists(exec_path + "/" + res):
 		lbl.config(text ="Такого Ексель файла не сущесвует!")
 	else:
-		do_job(res)
+		do_job(exec_path, res)
 		lbl.config(text ="Готово!")
 	
-def do_job(path):
-	raw_data = get_raw_data(path)
+def do_job(dirpath, filename):
+	raw_data = get_raw_data(dirpath + "/" + filename)
 	raw_data["VTK"]			= raw_data["VTK"].apply(lambda x: iget_vtk(parser = get_data(x)))
 	raw_data["bakerstore"]	= raw_data["bakerstore"].apply(lambda x: iget_bakerstore(parser = get_data(x)))
 	raw_data["tortomaster"]	= raw_data["tortomaster"].apply(lambda x: iget_tortomaster(parser = get_data(x)))
@@ -79,9 +84,12 @@ def do_job(path):
 	for cell in ws['A'] + ws[1]:
 		cell.style = 'Pandas'
 
-	wb.save("out.xlsx")
+	print("SAVING TO: " + dirpath)
+	wb.save(dirpath + "/" + "out.xlsx")
 
 if __name__ == "__main__":
+	os.chdir(os.getcwd())
+
 	window = Tk()
 	window.title("Candy Parser")
 	window.geometry('400x250')
@@ -91,10 +99,13 @@ if __name__ == "__main__":
 	
 	lbl = Label(text = "Привет! Нажми на кнопку, чтобы загрузить данные!")
 	lbl.pack()
+	path = Label(text = "PATH: ")
+	path.pack()
 	txt = Entry(back,width=20)
 	txt.pack()
 	txt.focus()
 	btn = Button(back, text="Загрузить", command=onclick)
 	window.bind('<Return>', onclick)
+	window.bind('<Escape>', sys.exit)
 	btn.pack()
 	window.mainloop()
