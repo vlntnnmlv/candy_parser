@@ -1,1 +1,1 @@
-# candy_parser
+# Сandy_parser
