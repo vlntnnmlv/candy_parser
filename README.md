@@ -13,7 +13,7 @@ Input data should be in the following format, contained in ".xlsx" file:
 | name |    link    | link  |    link     |
 | name |    link    | link  |    link     |
 
-Output ".xlsx" file bw created in near the executable, with data fromat like:
+Output ".xlsx" file will be created near the executable, with data fromat like:
 
 |      | bakerstore |  VTK  | tortomaster |
 |------|------------|-------|-------------|
