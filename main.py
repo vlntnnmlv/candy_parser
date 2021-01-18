@@ -41,7 +41,7 @@ def iget_bakerstore(parser):
 		price = raw.string
 	else:
 		price = parser.find("span", {"class" : "autocalc-product-price"}).string
-	return (price + ".0")
+	return (price)
 
 def iget_vtk(parser):
 	''' Gets price from the vtk page's parser object '''
@@ -51,7 +51,7 @@ def iget_vtk(parser):
 def iget_tortomaster(parser):
 	''' Gets price from the tortomaster page's parser object '''
 	price = "".join(parser.find_all("span", {"class" : "price"})[0].text[:-1].split(" "))
-	return (price)
+	return (price + ".0")
 
 def onclick(event=None):
 	res = txt.get()
