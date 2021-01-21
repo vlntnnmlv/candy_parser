@@ -20,7 +20,3 @@ Output ".xlsx" file will be created near the executable, with data fromat like:
 | name |    price   | price |    price    |
 | name |    price   | price |    price    |
 | name |    price   | price |    price    |
-
-<table>
- <row><col>8===D</col></row>
-</table>
