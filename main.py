@@ -4,9 +4,10 @@ import	pandas
 import	requests
 import	warnings
 import	openpyxl
-from 	openpyxl.styles import Font
+from 	openpyxl.styles import Font, PatternFill, Alignment
 from	openpyxl.utils.dataframe import dataframe_to_rows
 import	os
+from	numpy import NaN
 from	bs4 import BeautifulSoup as bs
 from	itertools import islice
 from	tkinter import *
@@ -15,10 +16,12 @@ import	sys
 import	tkinter.ttk as ttk
 import	threading
 import	time
-from	concurrent import futures
+
+ND = "not defined"
 
 def get_raw_data(path):
-	''' Reads data from xlsx file to pandas DataFrame '''
+	''' Reads data from xlsx file
+	 and converts it to pandas DataFrame '''
 	wb = openpyxl.load_workbook(path)
 	ws = wb.active
 
@@ -28,26 +31,30 @@ def get_raw_data(path):
 	idx = [r[0] for r in data]
 	data = (islice(r, 1, None) for r in data)
 	df = pandas.DataFrame(data, index=idx, columns=cols)
+	wb.close()
 	return (df)
 
 def get_data(page):
 	''' Downloads a page data from the website 'page'
 		and returns a parser object '''
-	if (not page):
-		return (None)
-	if (page[:8] != "https://"):
-		return (page)
-	headers = {"User-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36"}
-	res = requests.get(page, headers=headers, verify=False)
-	soup = bs(res.text, "html.parser")
-	return (soup)
+	try:
+		if (not page):
+			return (None)
+		if (page[:8] != "https://"):
+			return (page)
+		headers = {"User-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36"}
+		res = requests.get(page, headers=headers, verify=False, timeout = 1.5)
+		soup = bs(res.text, "html.parser")
+		return (soup)
+	except:
+		return (ND)
 
 def iget_bakerstore(parser):
 	''' Gets price from the bakerstore page's parser object '''
 	if (not parser):
 		return ("")
 	if (type(parser) == str):
-		return (parser)
+		return (ND)
 	raw = parser.find("span", {"class" : "autocalc-product-special"})
 	if (raw):
 		price = raw.string
@@ -60,7 +67,7 @@ def iget_vtk(parser):
 	if (not parser):
 		return ("")
 	if (type(parser) == str):
-		return (parser)
+		return (ND)
 	price = parser.find("span", {"class" : "tprice-value"}).string
 	return int(price.replace(" ", ""))
 
@@ -69,7 +76,7 @@ def iget_tortomaster(parser):
 	if (not parser):
 		return ("")
 	if (type(parser) == str):
-		return (parser)
+		return (ND)
 	price = "".join(parser.find_all("span", {"class" : "price"})[0].text[:-1].split(" "))
 	return int(price)
 
@@ -98,41 +105,46 @@ def do_job(filename):
 	pb['value'] = 0
 	raw_data = get_raw_data(filename)
 	new_data = pandas.DataFrame()
-	new_data["VTK"]			= raw_data["VTK"].apply(lambda x: iget_vtk(parser = get_data(x)))
+	lbl.config(text = "Загружаем с VTK...")
+	t = time.time()
+	new_data["VTK"]			= raw_data["VTK"].apply(lambda x: iget_vtk(parser = get_data(x)) if x != None else None)
 	pb['value'] += 10
-	new_data["bakerstore"]	= raw_data["bakerstore"].apply(lambda x: iget_bakerstore(parser = get_data(x)))
+	lbl.config(text = "Загружаем с bakerstore...")
+	new_data["bakerstore"]	= raw_data["bakerstore"].apply(lambda x: iget_bakerstore(parser = get_data(x)) if x != None else None)
 	pb['value'] += 10
-	new_data["tortomaster"]	= raw_data["tortomaster"].apply(lambda x: iget_tortomaster(parser = get_data(x)))
+	lbl.config(text = "Загружаем с tortomaster...")
+	new_data["tortomaster"]	= raw_data["tortomaster"].apply(lambda x: iget_tortomaster(parser = get_data(x)) if x != None else None)
 	pb['value'] += 10
 
 	empty = pandas.DataFrame()
 	empty[""] = ""
-	new_data = new_data.join(empty[""])
-	new_data = new_data.join(raw_data["VTK"], rsuffix="_link")
-	new_data = new_data.join(raw_data["bakerstore"], rsuffix="_link")
-	new_data = new_data.join(raw_data["tortomaster"], rsuffix="_link")
+	dfs = [new_data, raw_data["VTK"], raw_data["bakerstore"], raw_data["tortomaster"]]
+	for i in range(4):
+		dfs[i] = dfs[i].loc[~dfs[i].index.duplicated(keep='first')]
+	new_data = pandas.concat(dfs, axis = 1)
 	wb = openpyxl.Workbook()
 	pb['value'] += 10
 	ws = wb.active
 	pb['value'] += 10
+
 	for r in dataframe_to_rows(new_data, index=True, header=True):
 		ws.append(r)
 	pb['value'] += 10
 	for cell in ws['A'] + ws[1]:
 		if (cell.value):
-			cell.style = 'Pandas'
+			cell.alignment = Alignment(horizontal='left')
 
+	for cell in ws[1]:
+		if (cell.value):
+			cell.font = Font(bold = True)
+
+	for row in range(1, ws.max_row + 1):
+		print(ws.cell(row = row, column = 1).value, ws.cell(row = row, column = 2).value)
+		if ws.cell(row = row, column = 1).value and not ws.cell(row = row, column = 2).value:
+			ws.cell(row = row, column = 1).font = Font(bold = True)
+ 
 	for cell in ws['B'] + ws['C'] + ws['D']:
 		cell.number_format = "General"
-
-	font = Font(name='Calibri',
-                 size=11,
-                 bold=False,
-                 italic=False,
-                 vertAlign=None,
-                 underline='none',
-                 strike=False,
-                 color='408B22')
 
 	for row in range(3, new_data.shape[0] + 3):
 		m = 1000000000
@@ -143,9 +155,11 @@ def do_job(filename):
 				int(ws.cell(row = row, column = col).value) < int(m):
 				m = int(ws.cell(row = row, column = col).value)
 				min_col = col
-		ws.cell(row = row, column = min_col).font = font
+		if ws.cell(row = row, column = min_col).value and \
+		type(ws.cell(row = row, column = min_col).value) == int:
+			ws.cell(row = row, column = min_col).fill = PatternFill("solid", bgColor="99CC00")
 
-	ws.column_dimensions['A'].width = 100
+	ws.column_dimensions['A'].width = 80
 	ws.column_dimensions['B'].width = 20
 	ws.column_dimensions['C'].width = 20
 	ws.column_dimensions['D'].width = 20
@@ -157,7 +171,7 @@ def do_job(filename):
 	lbl.config(text ="Готово!", fg="green", font=("bold"))
 	pb['value'] += 10
 
-if __name__ == "__main__":	
+if __name__ == "__main__":
 	os.chdir(os.getcwd())
 	warnings.filterwarnings("ignore")
 
