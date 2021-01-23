@@ -139,7 +139,6 @@ def do_job(filename):
 			cell.font = Font(bold = True)
 
 	for row in range(1, ws.max_row + 1):
-		print(ws.cell(row = row, column = 1).value, ws.cell(row = row, column = 2).value)
 		if ws.cell(row = row, column = 1).value and not ws.cell(row = row, column = 2).value:
 			ws.cell(row = row, column = 1).font = Font(bold = True)
  
