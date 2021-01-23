@@ -53,7 +53,7 @@ def iget_bakerstore(parser):
 		price = raw.string
 	else:
 		price = parser.find("span", {"class" : "autocalc-product-price"}).string
-	return (price.replace(".0", ""))
+	return int(price.replace(".0", ""))
 
 def iget_vtk(parser):
 	''' Gets price from the vtk page's parser object '''
@@ -62,7 +62,7 @@ def iget_vtk(parser):
 	if (type(parser) == str):
 		return (parser)
 	price = parser.find("span", {"class" : "tprice-value"}).string
-	return (price.replace(" ", ""))
+	return int(price.replace(" ", ""))
 
 def iget_tortomaster(parser):
 	''' Gets price from the tortomaster page's parser object '''
@@ -71,7 +71,7 @@ def iget_tortomaster(parser):
 	if (type(parser) == str):
 		return (parser)
 	price = "".join(parser.find_all("span", {"class" : "price"})[0].text[:-1].split(" "))
-	return (price )
+	return int(price)
 
 def onclick(event=None):
 	''' Checks is chosen file valid and calls parser function '''
@@ -97,25 +97,59 @@ def do_job(filename):
 		and changes data with price values '''
 	pb['value'] = 0
 	raw_data = get_raw_data(filename)
-	raw_data["VTK"]			= raw_data["VTK"].apply(lambda x: iget_vtk(parser = get_data(x)))
+	new_data = pandas.DataFrame()
+	new_data["VTK"]			= raw_data["VTK"].apply(lambda x: iget_vtk(parser = get_data(x)))
 	pb['value'] += 10
-	raw_data["bakerstore"]	= raw_data["bakerstore"].apply(lambda x: iget_bakerstore(parser = get_data(x)))
+	new_data["bakerstore"]	= raw_data["bakerstore"].apply(lambda x: iget_bakerstore(parser = get_data(x)))
 	pb['value'] += 10
-	raw_data["tortomaster"]	= raw_data["tortomaster"].apply(lambda x: iget_tortomaster(parser = get_data(x)))
+	new_data["tortomaster"]	= raw_data["tortomaster"].apply(lambda x: iget_tortomaster(parser = get_data(x)))
 	pb['value'] += 10
 
+	empty = pandas.DataFrame()
+	empty[""] = ""
+	new_data = new_data.join(empty[""])
+	new_data = new_data.join(raw_data["VTK"], rsuffix="_link")
+	new_data = new_data.join(raw_data["bakerstore"], rsuffix="_link")
+	new_data = new_data.join(raw_data["tortomaster"], rsuffix="_link")
 	wb = openpyxl.Workbook()
 	pb['value'] += 10
 	ws = wb.active
 	pb['value'] += 10
-	for r in dataframe_to_rows(raw_data, index=True, header=True):
+	for r in dataframe_to_rows(new_data, index=True, header=True):
 		ws.append(r)
 	pb['value'] += 10
 	for cell in ws['A'] + ws[1]:
 		if (cell.value):
 			cell.style = 'Pandas'
+
+	for cell in ws['B'] + ws['C'] + ws['D']:
+		cell.number_format = "General"
+
+	font = Font(name='Calibri',
+                 size=11,
+                 bold=False,
+                 italic=False,
+                 vertAlign=None,
+                 underline='none',
+                 strike=False,
+                 color='408B22')
+
+	for row in range(3, new_data.shape[0] + 3):
+		m = 1000000000
+		min_col = 2
+		for col in [2,3,4]:
+			if ws.cell(row = row, column = col).value and \
+				type(ws.cell(row = row, column = col).value) == int and \
+				int(ws.cell(row = row, column = col).value) < int(m):
+				m = int(ws.cell(row = row, column = col).value)
+				min_col = col
+		ws.cell(row = row, column = min_col).font = font
+
+	ws.column_dimensions['A'].width = 100
+			
 	pb['value'] += 10
 	wb.save("./" + filename.split('/')[-1].split('.')[-2] + "_out.xlsx")
+	wb.close()
 	pb['value'] += 10
 	lbl.config(text ="Готово!", fg="green", font=("bold"))
 	pb['value'] += 10
