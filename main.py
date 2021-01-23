@@ -146,6 +146,9 @@ def do_job(filename):
 		ws.cell(row = row, column = min_col).font = font
 
 	ws.column_dimensions['A'].width = 100
+	ws.column_dimensions['B'].width = 20
+	ws.column_dimensions['C'].width = 20
+	ws.column_dimensions['D'].width = 20
 			
 	pb['value'] += 10
 	wb.save("./" + filename.split('/')[-1].split('.')[-2] + "_out.xlsx")
