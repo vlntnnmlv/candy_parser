@@ -1,7 +1,8 @@
-NAME = candy_parser
+NAME = "Candy Parser"
+ICON = candy.ico
 
 $(NAME):
-	pyinstaller --onefile main.py -n $(NAME) --hidden-import cmath
+	pyinstaller --onefile -n $(NAME) --hidden-import cmath --windowed --noconsole --icon=$(ICON) main.py
 
 all: $(NAME)
 	make clean
