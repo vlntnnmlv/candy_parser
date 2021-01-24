@@ -56,11 +56,14 @@ def iget_bakerstore(parser):
 	if (type(parser) == str):
 		return (ND)
 	raw = parser.find("span", {"class" : "autocalc-product-special"})
-	if (raw):
-		price = raw.string
-	else:
-		price = parser.find("span", {"class" : "autocalc-product-price"}).string
-	return int(price.replace(".0", ""))
+	try:
+		if (raw):
+			price = raw.string
+		else:
+			price = parser.find("span", {"class" : "autocalc-product-price"}).string
+		return int(price.replace(".0", ""))
+	except:
+		return (ND)
 
 def iget_vtk(parser):
 	''' Gets price from the vtk page's parser object '''
@@ -68,8 +71,11 @@ def iget_vtk(parser):
 		return ("")
 	if (type(parser) == str):
 		return (ND)
-	price = parser.find("span", {"class" : "tprice-value"}).string
-	return int(price.replace(" ", ""))
+	try:
+		price = parser.find("span", {"class" : "tprice-value"}).string
+		return int(price.replace(" ", ""))
+	except:
+		return (ND)
 
 def iget_tortomaster(parser):
 	''' Gets price from the tortomaster page's parser object '''
@@ -77,9 +83,12 @@ def iget_tortomaster(parser):
 		return ("")
 	if (type(parser) == str):
 		return (ND)
-	price = "".join(parser.find_all("span", {"class" : "price"})[0].text[:-1].split(" "))
-	return int(price)
-
+	try:
+		price = "".join(parser.find_all("span", {"class" : "price"})[0].text[:-1].split(" "))
+		return int(price)
+	except:
+		return (ND)
+		
 def onclick(event=None):
 	''' Checks is chosen file valid and calls parser function '''
 	try:
@@ -97,7 +106,10 @@ def onclick(event=None):
 				do_job(res)
 				btn.config(state=NORMAL)
 	except BaseException as e:
-		lbl.config(text = "Что-то пошло не так!\nОбратитесь к разработчику!\n" + str(e), fg = "red")
+		if "permission denied" in str(e).lower():
+			lbl.config(text = "Что-то пошло не так!\nПожалуйста, закройте Excel файл!\n" + str(e).replace("[Errno 13] Permission denied: ",""), fg = "red")
+		else:
+			lbl.config(text = "Что-то пошло не так!\nОбратитесь к разработчику!\n" + str(e), fg = "red")
 
 def do_job(filename):
 	''' Parser function. Sends requests by link in the file, 
@@ -156,7 +168,7 @@ def do_job(filename):
 				min_col = col
 		if ws.cell(row = row, column = min_col).value and \
 		type(ws.cell(row = row, column = min_col).value) == int:
-			ws.cell(row = row, column = min_col).fill = PatternFill("solid", bgColor="99CC00")
+			ws.cell(row = row, column = min_col).fill = PatternFill(start_color='92D050', end_color='92D050', fill_type = 'solid')
 
 	ws.column_dimensions['A'].width = 80
 	ws.column_dimensions['B'].width = 20
