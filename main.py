@@ -13,7 +13,6 @@ from tkinter import *
 from tkinter import filedialog
 from CandyExcel import CandyExcel
 
-
 def onclick(event=None):
 	''' Checks is chosen file valid and calls parser function '''
 	try:
@@ -48,7 +47,8 @@ def do_job(filename):
 	ce.set_raw_data(filename, GUIParams)
 	ce.create_new_data(GUIParams)
 	ce.save_data(GUIParams)
-	ce.prettify_data(filename, GUIParams)
+	ce.prettify_data(GUIParams)
+	ce.close_data(filename)
 	lbl.config(text ="Готово!", fg="green", font=("bold"))
 
 

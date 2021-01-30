@@ -99,21 +99,39 @@ class CandyExcel:
 		GUIParams["pb"]["value"] += 20
 
 	def save_data(self, GUIParams):
+		print(self._new_data)
 		GUIParams["lbl"].config(text = "Сохраняем файл...")
 		empty = pd.DataFrame()
 		empty[""] = ""
 		dfs = [self._new_data, empty, self._raw_data["VTK"], self._raw_data["bakerstore"], self._raw_data["tortomaster"]]
 		for i in range(5):
-			dfs[i] = dfs[i].loc[~dfs[i].index.duplicated(keep='first')]
-		self._new_data = pd.concat(dfs, axis = 1)
+			dfs[i] = dfs[i].reset_index(drop = True)
+		for d in dfs:
+			print(d)
+		self._new_data = pd.concat(dfs, axis = 1, ignore_index = True)
+		print(self._new_data)
+
 		self._out_wb = openpyxl.Workbook()
 		self._out_ws = self._out_wb.active
 
-		for r in dataframe_to_rows(self._new_data, index=True, header=True):
-			self._out_ws.append(r)
+		inds = self._raw_data.index.tolist()
+		cols = self._raw_data.columns.values.tolist()
+		cols.append(None)
+		cols += self._raw_data.columns.values.tolist()
+		values = self._new_data.values.tolist()
+
+		cols.insert(0, None)
+		print(cols)
+		for i in range(len(inds)):
+			print(inds[i], values[i])
+		self._out_ws.append(cols)
+		for i in range(len(values)):
+			values[i].insert(0, inds[i])
+			self._out_ws.append(values[i])
+
 		GUIParams["pb"]["value"] += 15
 
-	def prettify_data(self, filename, GUIParams):
+	def prettify_data(self, GUIParams):
 		GUIParams["lbl"].config(text = "Фоорматируем данные...")
 		for cell in self._out_ws['A'] + self._out_ws[1]:
 			if (cell.value):
@@ -130,7 +148,7 @@ class CandyExcel:
 		for cell in self._out_ws['B'] + self._out_ws['C'] + self._out_ws['D']:
 			cell.number_format = "General"
 
-		for row in range(3, self._new_data.shape[0] + 3):
+		for row in range(2, self._new_data.shape[0] + 2):
 			m = 1000000000
 			min_col = 2
 			for col in [2,3,4]:
@@ -148,6 +166,8 @@ class CandyExcel:
 		self._out_ws.column_dimensions['C'].width = 20
 		self._out_ws.column_dimensions['D'].width = 20
 
+		GUIParams["pb"]["value"] += 10
+
+	def close_data(self, filename):
 		self._out_wb.save("./" + filename.split('/')[-1].split('.')[-2] + "_out.xlsx")
 		self._out_wb.close()
-		GUIParams["pb"]["value"] += 10
