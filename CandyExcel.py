@@ -12,7 +12,6 @@ class CandyExcel:
 	''' Excel data class '''
 
 	ND = "not defined"
-	global pb
 
 	def __init__(self):
 		self._raw_data = None
