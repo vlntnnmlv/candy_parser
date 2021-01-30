@@ -2,7 +2,7 @@ NAME = "Candy Parser"
 ICON = candy.ico
 
 $(NAME):
-	pyinstaller --onefile -n $(NAME) --hidden-import cmath --windowed --noconsole --icon=$(ICON) main.py
+	pyinstaller --onefile -n $(NAME) --hidden-import cmath --windowed --noconsole --icon=$(ICON) main.py CandyExcel.py
 
 all: $(NAME)
 	make clean
