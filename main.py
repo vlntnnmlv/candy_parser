@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup as bs
 from itertools import islice
 from tkinter import *
 from tkinter import filedialog
-from CandyExcel import CandyExcel
+from candyexcel import CandyExcel
 
 def onclick(event=None):
 	''' Checks is chosen file valid and calls parser function '''
