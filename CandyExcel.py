@@ -1,9 +1,11 @@
 #! /usr/bin/env python3
 
 import openpyxl
+from openpyxl.reader.excel import load_workbook
 import pandas as pd
 import requests
 from itertools import islice
+from functools import reduce
 from bs4 import BeautifulSoup as bs
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.styles import Font, PatternFill, Alignment
@@ -167,6 +169,29 @@ class CandyExcel:
 		self._out_ws.column_dimensions['D'].width = 20
 
 		GUIParams["pb"]["value"] += 10
+	'''
+	/ --- Deprecated --- /
+	/ ------------------ /
+	/ ------------------ /
+	/ ------------------ /
+	/ ---   Actual   --- /
+	'''
+	def	clone_update(self, filename):
+		self._out_wb = load_workbook(filename)
+		self._out_ws = self._out_wb.active
+
+		for r in self._out_ws.iter_rows():
+			for c in r:
+				if (c.value and type(c.value) == str and c.value[:8] == "https://"):
+					if ("vtk" in str(c.value)):
+						c.value = self._iget_vtk(parser = self._get_data(c.value))
+					if ("bakerstore" in str(c.value)):
+						c.value = self._iget_bakerstore(parser = self._get_data(c.value))
+					if ("tortomaster" in str(c.value)):
+						c.value = self._iget_tortomaster(parser = self._get_data(c.value))
+			if (type(r[1].value) == int or type(r[2].value) == int or type(r[3].value) == int):
+				m = min(r[1:], key = lambda x: x.value if type(x.value) == int else 1000000000)
+				m.fill = PatternFill(start_color='92D050', end_color='92D0FF', fill_type = 'solid')
 
 	def close_data(self, filename):
 		self._out_wb.save("./" + filename.split('/')[-1].split('.')[-2] + "_out.xlsx")

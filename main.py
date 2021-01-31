@@ -16,7 +16,11 @@ from CandyExcel import CandyExcel
 def onclick(event=None):
 	''' Checks is chosen file valid and calls parser function '''
 	try:
-		res = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("Excel files","*.xlsx"),("all files","*.*")))
+		res = filedialog.askopenfilename(
+			initialdir = "/",
+			title = "Select file",
+			filetypes = (("Excel files","*.xlsx"),("all files","*.*"))
+			)
 		if (res):
 			exec_path = res
 			path.config(text = "PATH: " + os.path.abspath(res))
@@ -31,24 +35,37 @@ def onclick(event=None):
 				btn.config(state=NORMAL)
 	except BaseException as e:
 		if "permission denied" in str(e).lower():
-			lbl.config(text = "Что-то пошло не так!\nПожалуйста, закройте Excel файл!\n" + str(e).replace("[Errno 13] Permission denied: ",""), fg = "red")
+			lbl.config(
+				text =
+					"Что-то пошло не так!\
+					\nПожалуйста, закройте Excel файл!\
+					\n" + str(e).replace("[Errno 13] Permission denied: ",""),
+				fg = "red"
+				)
 		else:
-			lbl.config(text = "Что-то пошло не так!\nОбратитесь к разработчику!\n" + str(e), fg = "red")
+			lbl.config(
+				text =
+					"Что-то пошло не так!\
+					\nОбратитесь к разработчику!\
+					\n" + str(e),
+				fg = "red"
+				)
 
 
 def do_job(filename):
 	''' Parser function. Sends requests by link in the file,
 		and changes data with price values '''
 
-	GUIParams = {"lbl" : lbl, "pb" : pb}
 	pb['value'] = 0
-
+	
 	ce = CandyExcel()
-	ce.set_raw_data(filename, GUIParams)
-	ce.create_new_data(GUIParams)
-	ce.save_data(GUIParams)
-	ce.prettify_data(GUIParams)
+
+	pb.start()
+	lbl.config(text = "Загружаем данные...")
+	ce.clone_update(filename)
+
 	ce.close_data(filename)
+	pb.stop()
 	lbl.config(text ="Готово!", fg="green", font=("bold"))
 
 
@@ -65,7 +82,7 @@ if __name__ == "__main__":
 	lbl.pack()
 	path = Label(text = "PATH: ", fg="grey")
 	path.pack()
-	pb = ttk.Progressbar(back, mode="determinate", maximum = 90)
+	pb = ttk.Progressbar(back, mode="indeterminate")
 	pb.pack(pady=20)
 	btn = Button(back, text="Выбрать файл", command=lambda : threading.Thread(target=onclick).start())
 	btn.pack()
