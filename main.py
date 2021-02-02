@@ -5,6 +5,7 @@ import os
 import sys
 import tkinter.ttk as ttk
 import threading
+import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils.dataframe import dataframe_to_rows
 from bs4 import BeautifulSoup as bs
@@ -12,8 +13,9 @@ from itertools import islice
 from tkinter import *
 from tkinter import filedialog
 from candyexcel import CandyExcel
+import time
 
-def onclick(event=None):
+def onclick(event = None):
 	''' Checks is chosen file valid and calls parser function '''
 	try:
 		res = filedialog.askopenfilename(
@@ -51,23 +53,18 @@ def onclick(event=None):
 				fg = "red"
 				)
 
-
 def do_job(filename):
 	''' Parser function. Sends requests by link in the file,
 		and changes data with price values '''
-
 	pb['value'] = 0
-	
 	ce = CandyExcel()
-
-	pb.start()
+	pb.start(10)
 	lbl.config(text = "Загружаем данные...")
 	ce.clone_update(filename)
-
 	ce.close_data(filename)
 	pb.stop()
 	lbl.config(text ="Готово!", fg="green", font=("bold"))
-
+	send.config(state = NORMAL)
 
 if __name__ == "__main__":
 	os.chdir(os.getcwd())
@@ -76,15 +73,25 @@ if __name__ == "__main__":
 	window = Tk()
 	window.title("Candy Parser")
 	window.geometry('480x320')
+
 	back=Frame(master=window, width=500, height=500)
 	back.pack(fill="none", expand=TRUE)
+
 	lbl = Label(text = "Привет! Нажми на кнопку, чтобы загрузить данные!")
 	lbl.pack()
+	
 	path = Label(text = "PATH: ", fg="grey")
 	path.pack()
+	
 	pb = ttk.Progressbar(back, mode="indeterminate")
 	pb.pack(pady=20)
-	btn = Button(back, text="Выбрать файл", command=lambda : threading.Thread(target=onclick).start())
+	
+	btn = Button(back, text="Выбрать файл", command=lambda : threading.Thread(target=onclick()).start())
 	btn.pack()
+
+	send = Button(back, text="Разослать")
+	send.pack()
+	send.config(state = DISABLED)
+	
 	window.bind('<Escape>', sys.exit)
 	window.mainloop()
