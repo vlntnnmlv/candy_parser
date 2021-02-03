@@ -6,6 +6,7 @@ import sys
 import tkinter.ttk as ttk
 import threading
 import openpyxl
+from openpyxl.descriptors import base
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils.dataframe import dataframe_to_rows
 from bs4 import BeautifulSoup as bs
@@ -14,6 +15,7 @@ from tkinter import *
 from tkinter import filedialog
 from candyexcel import CandyExcel
 import time
+from ntpath import basename
 
 def onclick(event = None):
 	''' Checks is chosen file valid and calls parser function '''
@@ -61,6 +63,37 @@ def do_job(filename):
 	pb.start(10)
 	lbl.config(text = "Загружаем данные...")
 	ce.clone_update(filename)
+
+	# --- Differences --- #
+
+	lbl.config(text = "Рассчитываем изменения...")
+	try:
+		old = openpyxl.load_workbook(basename(filename).split('.')[0] + "_out.xlsx").active
+		new = ce._out_ws
+
+		changes = ce._out_wb.copy_worksheet(ce._out_ws)
+		changes.title = "Изменения"
+
+		for ro, rn, rc in zip(
+			old.iter_rows(),
+			new.iter_rows(),
+			changes.iter_rows()
+		):
+			for co, cn, cc in zip(ro, rn, rc):
+				if (co.value and cn.value and type(co.value) == type(cn.value) == int):
+					if (co.value == cn.value):
+						cc.value = 0
+					else:
+						cc.value = cn.value - co.value
+						cc.number_format = "+0;-0"
+				else:
+					cc.value = cn.value
+	except BaseException as e:
+		pass
+
+	# ------------------- #
+
+	ce.prettify()
 	ce.close_data(filename)
 	pb.stop()
 	lbl.config(text ="Готово!", fg="green", font=("bold"))
@@ -86,7 +119,7 @@ if __name__ == "__main__":
 	pb = ttk.Progressbar(back, mode="indeterminate")
 	pb.pack(pady=20)
 	
-	btn = Button(back, text="Выбрать файл", command=lambda : threading.Thread(target=onclick()).start())
+	btn = Button(back, text="Выбрать файл", command=lambda : threading.Thread(target=onclick).start())
 	btn.pack()
 
 	send = Button(back, text="Разослать")
