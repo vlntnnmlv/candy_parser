@@ -14,8 +14,11 @@ from itertools import islice
 from tkinter import *
 from tkinter import filedialog
 from candyexcel import CandyExcel
+import candyexcel
 import time
 from ntpath import basename
+
+G = ""
 
 def onclick(event = None):
 	''' Checks is chosen file valid and calls parser function '''
@@ -34,8 +37,44 @@ def onclick(event = None):
 				lbl.config(text ="Такого Ексель файла не сущесвует!", fg="red")
 			else:
 				btn.config(state=DISABLED)
-				lbl.config(text = "Загружаем...", fg="blue")
 				do_job(res)
+				btn.config(state=NORMAL)
+	except BaseException as e:
+		if "permission denied" in str(e).lower():
+			lbl.config(
+				text =
+					"Что-то пошло не так!\
+					\nПожалуйста, закройте Excel файл!\
+					\n" + str(e).replace("[Errno 13] Permission denied: ",""),
+				fg = "red"
+				)
+		else:
+			lbl.config(
+				text =
+					"Что-то пошло не так!\
+					\nОбратитесь к разработчику!\
+					\n" + str(e),
+				fg = "red"
+				)
+
+def onclick2(event = None):
+	''' Checks is chosen file valid and calls mailing function '''
+	try:
+		res = filedialog.askopenfilename(
+			initialdir = "/",
+			title = "Select file",
+			filetypes = (("Excel files","*.xlsx"),("all files","*.*"))
+			)
+		if (res):
+			exec_path = res
+			path.config(text = "PATH: " + os.path.abspath(res))
+			if (res.split(".")[-1] != "xlsx"):
+				lbl.config(text = "Введите название Ексель файла.", fg="red")
+			elif not os.path.exists(res):
+				lbl.config(text ="Такого Ексель файла не сущесвует!", fg="red")
+			else:
+				btn.config(state=DISABLED)
+				do_job2(res)
 				btn.config(state=NORMAL)
 	except BaseException as e:
 		if "permission denied" in str(e).lower():
@@ -64,38 +103,26 @@ def do_job(filename):
 	lbl.config(text = "Загружаем данные...")
 	ce.clone_update(filename)
 
-	# --- Differences --- #
-
-	lbl.config(text = "Рассчитываем изменения...")
-	try:
-		old = openpyxl.load_workbook(basename(filename).split('.')[0] + "_out.xlsx").active
-		new = ce._out_ws
-
-		changes = ce._out_wb.copy_worksheet(ce._out_ws)
-		changes.title = "Изменения"
-
-		for ro, rn, rc in zip(
-			old.iter_rows(),
-			new.iter_rows(),
-			changes.iter_rows()
-		):
-			for co, cn, cc in zip(ro, rn, rc):
-				if (co.value and cn.value and type(co.value) == type(cn.value) == int):
-					if (co.value == cn.value):
-						cc.value = 0
-					else:
-						cc.value = cn.value - co.value
-						cc.number_format = "+0;-0"
-				else:
-					cc.value = cn.value
-	except BaseException as e:
-		pass
-
-	# ------------------- #
+	if (os.path.exists(basename(filename).split('.')[0] + "_out.xlsx")):
+		lbl.config(text = "Рассчитываем изменения...")
+		ce.calc_changes(filename)
 
 	ce.prettify()
 	ce.close_data(filename)
 	pb.stop()
+	lbl.config(text ="Готово!", fg="green", font=("bold"))
+	send.config(state = NORMAL)
+
+	global G
+	G = basename(filename).split('.')[0] + "_out.xlsx"
+	print('1 ' + G)
+
+def do_job2(filename):
+	global G
+	print('2 ' + G)
+	send.config(state = DISABLED)
+	lbl.config(text = "Проводим рассылку...", fg="blue")
+	candyexcel.mailing(filename, G)
 	lbl.config(text ="Готово!", fg="green", font=("bold"))
 	send.config(state = NORMAL)
 
@@ -122,9 +149,10 @@ if __name__ == "__main__":
 	btn = Button(back, text="Выбрать файл", command=lambda : threading.Thread(target=onclick).start())
 	btn.pack()
 
-	send = Button(back, text="Разослать")
+	send = Button(back, text="Разослать", command=lambda : threading.Thread(target=onclick2).start())
 	send.pack()
 	send.config(state = DISABLED)
 	
 	window.bind('<Escape>', sys.exit)
 	window.mainloop()
+
