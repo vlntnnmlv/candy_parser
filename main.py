@@ -60,11 +60,17 @@ def onclick(event = None):
 def onclick2(event = None):
 	''' Checks is chosen file valid and calls mailing function '''
 	try:
-		res = filedialog.askopenfilename(
-			initialdir = "/",
-			title = "Select file",
-			filetypes = (("Excel files","*.xlsx"),("all files","*.*"))
-			)
+		# res = filedialog.askopenfilename(
+		# 	initialdir = "/",
+		# 	title = "Select file",
+		# 	filetypes = (("Excel files","*.xlsx"),("all files","*.*"))
+		# 	)
+		if getattr(sys, 'frozen', False):
+			application_path = os.path.dirname(sys.executable)
+		elif __file__:
+			application_path = os.path.dirname(__file__)
+		# print(application_path)
+		res = os.path.join(application_path, "emails.xlsx")
 		if (res):
 			exec_path = res
 			path.config(text = "PATH: " + os.path.abspath(res))
@@ -115,14 +121,17 @@ def do_job(filename):
 
 	global G
 	G = basename(filename).split('.')[0] + "_out.xlsx"
-	print('1 ' + G)
 
 def do_job2(filename):
 	global G
-	print('2 ' + G)
 	send.config(state = DISABLED)
 	lbl.config(text = "Проводим рассылку...", fg="blue")
-	candyexcel.mailing(filename, G)
+	pb.start(10)
+	try:
+		candyexcel.mailing(filename, G)
+	except:
+		lbl.text = "Что-то пошло не так! Попробуйте еще раз!"
+	pb.stop()
 	lbl.config(text ="Готово!", fg="green", font=("bold"))
 	send.config(state = NORMAL)
 
@@ -144,6 +153,7 @@ if __name__ == "__main__":
 	path.pack()
 	
 	pb = ttk.Progressbar(back, mode="indeterminate")
+	pb.value = 0
 	pb.pack(pady=20)
 	
 	btn = Button(back, text="Выбрать файл", command=lambda : threading.Thread(target=onclick).start())
