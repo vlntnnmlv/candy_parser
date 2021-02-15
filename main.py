@@ -13,8 +13,8 @@ from bs4 import BeautifulSoup as bs
 from itertools import islice
 from tkinter import *
 from tkinter import filedialog
-from CandyExcel import CandyExcel
-import CandyExcel
+from candyexcel import CandyExcel
+import candyexcel
 import time
 from ntpath import basename
 
