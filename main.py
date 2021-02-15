@@ -14,7 +14,7 @@ from itertools import islice
 from tkinter import *
 from tkinter import filedialog
 from CandyExcel import CandyExcel
-import candyexcel
+import CandyExcel
 import time
 from ntpath import basename
 
