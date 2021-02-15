@@ -18,6 +18,7 @@ from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from email.mime.base import MIMEBase
 from email import encoders
+import os
 
 class CandyExcel:
 	''' Excel data class '''
@@ -172,7 +173,7 @@ def mailing(filename, attachment_f):
 		p = MIMEBase('application', 'octet-stream')
 		p.set_payload((attachment).read())
 		encoders.encode_base64(p)
-		p.add_header('Content-Disposition', "attachment; filename= %s" % filename) 
+		p.add_header('Content-Disposition', "attachment; filename= %s" % os.path.basename(filename)) 
 		msg.attach(p)
 		text = msg.as_string()
 		s.sendmail(fromaddr, toaddr, text)
