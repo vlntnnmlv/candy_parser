@@ -60,16 +60,10 @@ def onclick(event = None):
 def onclick2(event = None):
 	''' Checks is chosen file valid and calls mailing function '''
 	try:
-		# res = filedialog.askopenfilename(
-		# 	initialdir = "/",
-		# 	title = "Select file",
-		# 	filetypes = (("Excel files","*.xlsx"),("all files","*.*"))
-		# 	)
 		if getattr(sys, 'frozen', False):
 			application_path = os.path.dirname(sys.executable)
 		elif __file__:
 			application_path = os.path.dirname(__file__)
-		# print(application_path)
 		res = os.path.join(application_path, "emails.xlsx")
 		if (res):
 			exec_path = res
@@ -77,7 +71,7 @@ def onclick2(event = None):
 			if (res.split(".")[-1] != "xlsx"):
 				lbl.config(text = "Введите название Ексель файла.", fg="red")
 			elif not os.path.exists(res):
-				lbl.config(text ="Такого Ексель файла не сущесвует!", fg="red")
+				lbl.config(text ="Ексель файла для рассылки не сущесвует!", fg="red")
 			else:
 				btn.config(state=DISABLED)
 				do_job2(res)

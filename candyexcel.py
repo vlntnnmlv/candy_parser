@@ -11,7 +11,7 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from ntpath import basename
 import openpyxl
 from string import Template
-
+import time
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -144,7 +144,6 @@ class CandyExcel:
 
 def mailing(filename, attachment_f):
 
-	print(attachment_f)
 	data = pd.read_excel(filename)
 	names = data[data.columns[0]].to_list()
 	emails = data[data.columns[1]].to_list()
