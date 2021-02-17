@@ -1,0 +1,7 @@
+login:182760@edu.fa.ru
+password:DDdc9785
+server:smtp.office365.com
+subject:test
+body:Привет _name_!
+Это тест
+С уважением

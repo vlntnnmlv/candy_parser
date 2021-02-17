@@ -151,24 +151,24 @@ def mailing(filename, attachment_f):
 
 	template = Template(
 	"Уважаемый ${NAME},\n" + \
-	"это рассылка от Клубничкиной!\n" + \
+	"это пример рассылки\n" + \
 	"В прикрепленный файлах вы найдете всю информацию о ценах на самые необходимые кондитерские ингридиенты!\n" + \
-	"С любовью,\n" + \
-	"ваша Клубничкина!")
-
-	s = smtplib.SMTP(host='smtp.gmail.com', port=587)
+	"С уважением!")
+	login, password, server, body_t, subject = email_cred()
+	s = smtplib.SMTP(host=server)
 	s.starttls()
-	s.login("feedflax83@gmail.com", "CHEBurashkaKAKA278")
+	s.login(login, password)
 	
-	fromaddr = "feedflax83@gmail.com"
+	fromaddr = login
 	for name, email in zip(names, emails):
 		toaddr = email
 		msg = MIMEMultipart()
 		msg['From'] = fromaddr
 		msg['To'] = toaddr
-		msg['Subject'] = "Рассылка от Клубничкиной"
-		body = template.substitute(NAME = name)
+		msg['Subject'] = subject
+		body = body_t.replace("_name_", name)
 		msg.attach(MIMEText(body, 'plain'))
+		print(attachment_f)
 		attachment = open(attachment_f, "rb")
 		p = MIMEBase('application', 'octet-stream')
 		p.set_payload((attachment).read())
@@ -176,6 +176,25 @@ def mailing(filename, attachment_f):
 		p.add_header('Content-Disposition', "attachment; filename= %s" % os.path.basename(filename)) 
 		msg.attach(p)
 		text = msg.as_string()
-		s.sendmail(fromaddr, toaddr, text)
+		s.sendmail(msg['From'], msg['To'], text)
 		del msg
 	s.quit()
+
+def email_cred(filename="email.txt"):
+	em_log, em_pass, em_serv, em_body, em_subj = "","","","",""
+	with open(filename,encoding="utf-8", mode="r") as f:
+		txt = f.read()
+		em_body = txt.split("body:")[-1]
+		for i in txt.split('\n'):
+			print(i)
+			if "login" in i:
+				em_log = i.replace("login:","")
+			elif "server" in i:
+				em_serv = i.replace("server:","")
+			elif "subject" in i:
+				em_subj = i.replace("subject:","")
+			elif "password" in i:
+				em_pass = i.replace("password:","")
+	return em_log, em_pass, em_serv, em_body, em_subj
+
+		
