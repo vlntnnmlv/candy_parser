@@ -148,26 +148,16 @@ class CandyExcel:
 		self._out_wb.close()
 
 def mailing(filename, attachment_f):
-
-	print("!3\n")
-
 	data = pd.read_excel(filename)
 	names = data[data.columns[0]].to_list()
 	emails = data[data.columns[1]].to_list()
 
-	print("!4\n")
-
 	login, password, server, body_t, subject = email_cred()
-
-
-	print("!5\n")
 
 	s = smtplib.SMTP(host=server)
 	s.starttls()
 	s.login(login, password)
 	
-	print("!6\n")
-
 	fromaddr = login
 	for name, email in zip(names, emails):
 		toaddr = email
@@ -177,7 +167,6 @@ def mailing(filename, attachment_f):
 		msg['Subject'] = subject
 		body = body_t.replace("_name_", name)
 		msg.attach(MIMEText(body, 'plain'))
-		print(attachment_f)
 		attachment = open(attachment_f, "rb")
 		p = MIMEBase('application', 'octet-stream')
 		p.set_payload((attachment).read())
@@ -187,16 +176,12 @@ def mailing(filename, attachment_f):
 		text = msg.as_string()
 		s.sendmail(msg['From'], msg['To'], text)
 		del msg
-	
-	print("!7\n")
 
 	s.quit()
-
-	print("!8\n")
 
 
 def email_cred(filename="email.json"):
 	with open(filename,encoding="utf-8", mode="r") as f:
-		data = json.load(f)
+		data = load(f)
 	return data["login"], data["password"], data["server"], data["body"], data["subject"]
 		
