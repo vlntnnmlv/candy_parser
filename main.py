@@ -121,10 +121,14 @@ def do_job2(filename):
 	send.config(state = DISABLED)
 	lbl.config(text = "Проводим рассылку...", fg="blue")
 	pb.start(10)
-	try:
-		candyexcel.mailing(filename, G)
-	except:
-		lbl.text = "Что-то пошло не так! Попробуйте еще раз!"
+	# try:
+	print("!1\n")
+	candyexcel.mailing(filename, G)
+	print("!2\n")
+	# except:
+	# 	lbl.text = "Что-то пошло не так! Попробуйте еще раз!"
+	# 	pb.stop()
+	# 	return
 	pb.stop()
 	lbl.config(text ="Готово!", fg="green", font=("bold"))
 	send.config(state = NORMAL)

@@ -1,0 +1,7 @@
+{
+    "login" : "182763@edu.fa.ru",
+    "password" : "AaGc5684",
+    "server" : "smtp.office365.com",
+    "subject" : "test",
+    "body" : "Привет _name_!,\nЭто тест\nС уважением"
+}

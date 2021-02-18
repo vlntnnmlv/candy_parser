@@ -19,6 +19,7 @@ from email.mime.application import MIMEApplication
 from email.mime.base import MIMEBase
 from email import encoders
 import os
+from json import load
 
 class CandyExcel:
 	''' Excel data class '''
@@ -117,8 +118,11 @@ class CandyExcel:
 		old = openpyxl.load_workbook(basename(filename).split('.')[0] + "_out.xlsx").active
 		new = self._out_ws
 
-		changes = self._out_wb.copy_worksheet(self._out_ws)
-		changes.title = "Изменения"
+		if ("Изменения" not in self._out_wb.sheetnames):
+			changes = self._out_wb.copy_worksheet(self._out_ws)
+			changes.title = "Изменения"
+		else:
+			changes = self._out_wb["Изменения"]
 
 		for ro, rn, rc in zip(
 			old.iter_rows(),
@@ -145,20 +149,25 @@ class CandyExcel:
 
 def mailing(filename, attachment_f):
 
+	print("!3\n")
+
 	data = pd.read_excel(filename)
 	names = data[data.columns[0]].to_list()
 	emails = data[data.columns[1]].to_list()
 
-	template = Template(
-	"Уважаемый ${NAME},\n" + \
-	"это пример рассылки\n" + \
-	"В прикрепленный файлах вы найдете всю информацию о ценах на самые необходимые кондитерские ингридиенты!\n" + \
-	"С уважением!")
+	print("!4\n")
+
 	login, password, server, body_t, subject = email_cred()
+
+
+	print("!5\n")
+
 	s = smtplib.SMTP(host=server)
 	s.starttls()
 	s.login(login, password)
 	
+	print("!6\n")
+
 	fromaddr = login
 	for name, email in zip(names, emails):
 		toaddr = email
@@ -178,23 +187,16 @@ def mailing(filename, attachment_f):
 		text = msg.as_string()
 		s.sendmail(msg['From'], msg['To'], text)
 		del msg
+	
+	print("!7\n")
+
 	s.quit()
 
-def email_cred(filename="email.txt"):
-	em_log, em_pass, em_serv, em_body, em_subj = "","","","",""
-	with open(filename,encoding="utf-8", mode="r") as f:
-		txt = f.read()
-		em_body = txt.split("body:")[-1]
-		for i in txt.split('\n'):
-			print(i)
-			if "login" in i:
-				em_log = i.replace("login:","")
-			elif "server" in i:
-				em_serv = i.replace("server:","")
-			elif "subject" in i:
-				em_subj = i.replace("subject:","")
-			elif "password" in i:
-				em_pass = i.replace("password:","")
-	return em_log, em_pass, em_serv, em_body, em_subj
+	print("!8\n")
 
+
+def email_cred(filename="email.json"):
+	with open(filename,encoding="utf-8", mode="r") as f:
+		data = json.load(f)
+	return data["login"], data["password"], data["server"], data["body"], data["subject"]
 		
