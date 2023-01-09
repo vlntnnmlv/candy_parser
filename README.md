@@ -20,7 +20,3 @@ Output ".xlsx" file will be created near the executable, with data fromat like:
 | name |    price   | price |    price    |
 | name |    price   | price |    price    |
 | name |    price   | price |    price    |
-
-
-Link to the overview of the tool
-https://www.loom.com/share/5b2475720a4d451aa677728208195416
